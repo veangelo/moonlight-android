@@ -35,6 +35,7 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.util.Range;
 import android.view.Choreographer;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 
 public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements Choreographer.FrameCallback {
@@ -71,6 +72,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private int initialWidth, initialHeight;
     private int videoFormat;
     private SurfaceHolder renderTarget;
+    private Surface renderSurface;
     private volatile boolean stopping;
     private CrashListener crashListener;
     private boolean reportedCrash;
@@ -292,6 +294,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     public void setRenderTarget(SurfaceHolder renderTarget) {
         this.renderTarget = renderTarget;
+    }
+
+    public void setRenderSurface(Surface renderSurface) {
+        this.renderSurface = renderSurface;
+        this.renderTarget = null;
     }
 
     public MediaCodecDecoderRenderer(Activity activity, PreferenceConfiguration prefs,
@@ -537,7 +544,13 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         LimeLog.info("Configuring with format: "+format);
 
-        videoDecoder.configure(format, renderTarget.getSurface(), null, 0);
+        Surface configuredSurface = renderSurface != null ? renderSurface :
+                (renderTarget != null ? renderTarget.getSurface() : null);
+        if (configuredSurface == null) {
+            throw new IllegalStateException("No render surface available for decoder configuration");
+        }
+
+        videoDecoder.configure(format, configuredSurface, null, 0);
 
         configuredFormat = format;
 
