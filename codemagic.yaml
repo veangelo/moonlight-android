@@ -1,16 +1,25 @@
 workflows:
-  apk-build:
-    name: Build Moonlight APK
+  aar-build:
+    name: Build Moonlight AAR for Unity
     scripts:
-      - name: Build APK
+      - name: Create Fake BuildConfig
         script: |
-          ./gradlew :app:assembleDebug
-      - name: List all generated files
+          # Create fake BuildConfig to fix compilation errors
+          mkdir -p xrstreamingplugin/build/generated/source/buildConfig/debug/com/limelight/
+          cat > xrstreamingplugin/build/generated/source/buildConfig/debug/com/limelight/BuildConfig.java << 'EOF'
+          package com.limelight;
+          public final class BuildConfig {
+            public static final boolean DEBUG = Boolean.parseBoolean("true");
+            public static final String APPLICATION_ID = "com.limelight.xr";
+            public static final String BUILD_TYPE = "debug";
+            public static final boolean ROOT_BUILD = false;
+          }
+          EOF
+      - name: Build AAR
         script: |
-          find . -name "*.apk" -type f
+          ./gradlew :xrstreamingplugin:assembleDebug
+      - name: List AAR files
+        script: |
           find . -name "*.aar" -type f
     artifacts:
-      - app/build/outputs/apk/**/*.apk
-      - app/build/outputs/**/*.apk
-      - "**/*.apk"
-      - build/**/outputs/**/*
+      - xrstreamingplugin/build/outputs/aar/*.aar
