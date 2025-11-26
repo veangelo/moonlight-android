@@ -2,35 +2,20 @@ workflows:
   aar-build:
     name: Build Moonlight AAR for Unity
     scripts:
-      - name: Create All Missing BuildConfig Files
+      - name: Fix BuildConfig References
         script: |
-          # Create BuildConfig for app module (this is what's actually being imported)
-          mkdir -p app/build/generated/source/buildConfig/debug/com/limelight/
-          cat > app/build/generated/source/buildConfig/debug/com/limelight/BuildConfig.java << 'EOF'
-          package com.limelight;
-          public final class BuildConfig {
-            public static final boolean DEBUG = true;
-            public static final String APPLICATION_ID = "com.limelight";
-            public static final String BUILD_TYPE = "debug";
-            public static final boolean ROOT_BUILD = false;
-          }
-          EOF
-          
-          # Also create for xrstreamingplugin module
-          mkdir -p xrstreamingplugin/build/generated/source/buildConfig/debug/com/limelight/xr/
-          cat > xrstreamingplugin/build/generated/source/buildConfig/debug/com/limelight/xr/BuildConfig.java << 'EOF'
-          package com.limelight.xr;
-          public final class BuildConfig {
-            public static final boolean DEBUG = true;
-            public static final String APPLICATION_ID = "com.limelight.xr";
-            public static final String BUILD_TYPE = "debug";
-          }
-          EOF
+          # Temporarily comment out BuildConfig references in problematic files
+          sed -i '.bak' 's/BuildConfig.DEBUG/true/g' app/src/main/java/com/limelight/binding/video/MediaCodecDecoderRenderer.java
+          sed -i '.bak' 's/BuildConfig.DEBUG/false/g' app/src/main/java/com/limelight/nvstream/http/NvHTTP.java
+          sed -i '.bak' 's/BuildConfig.APPLICATION_ID/"com.limelight"/g' app/src/main/java/com/limelight/PosterContentProvider.java
+          sed -i '.bak' 's/BuildConfig.ROOT_BUILD/false/g' app/src/main/java/com/limelight/binding/input/capture/InputCaptureManager.java
+          sed -i '.bak' 's/BuildConfig.ROOT_BUILD/false/g' app/src/main/java/com/limelight/binding/input/evdev/EvdevCaptureProviderShim.java
       - name: Build AAR
         script: |
           ./gradlew :xrstreamingplugin:assembleDebug
-      - name: List AAR files
+      - name: Restore Files
         script: |
-          find . -name "*.aar" -type f
+          # Restore original files
+          find . -name "*.bak" -exec sh -c 'mv "$1" "${1%.bak}"' _ {} \;
     artifacts:
       - xrstreamingplugin/build/outputs/aar/*.aar
