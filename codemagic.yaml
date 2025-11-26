@@ -1,0 +1,18 @@
+workflows:
+  aar-build:
+    name: Build Moonlight AAR
+    environment:
+      android_sdk: "34.0.0"
+    scripts:
+      - name: Build AAR
+        script: |
+          ./gradlew :xrstreamingplugin:assembleRelease
+      - name: List AAR files
+        script: |
+          find . -name "*.aar" -type f
+    artifacts:
+      - xrstreamingplugin/build/outputs/aar/*.aar
+    publishing:
+      email:
+        recipients:
+          - your-actual-email@gmail.com   # ← CHANGE THIS TO YOUR EMAIL
