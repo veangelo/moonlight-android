@@ -2,15 +2,8 @@ workflows:
   aar-build:
     name: Build Moonlight AAR
     scripts:
-      - name: Build AAR
+      - name: Build Debug AAR
         script: |
-          ./gradlew :xrstreamingplugin:assembleRelease
-      - name: List AAR files
-        script: |
-          find . -name "*.aar" -type f
+          ./gradlew :xrstreamingplugin:assembleDebug
     artifacts:
       - xrstreamingplugin/build/outputs/aar/*.aar
-    publishing:
-      email:
-        recipients:
-          - your-actual-email@gmail.com
