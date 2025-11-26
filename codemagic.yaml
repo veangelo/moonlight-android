@@ -2,26 +2,33 @@ workflows:
   aar-build:
     name: Build Moonlight AAR for Unity
     scripts:
-      - name: Fix BuildConfig Dependencies
+      - name: Fix BuildConfig with Python
         script: |
-          # Replace BuildConfig references with hardcoded values in ALL problematic files
-          sed -i 's/BuildConfig\.DEBUG/true/g' app/src/main/java/com/limelight/binding/video/MediaCodecDecoderRenderer.java
-          sed -i 's/BuildConfig\.DEBUG/false/g' app/src/main/java/com/limelight/nvstream/http/NvHTTP.java
-          sed -i 's/BuildConfig\.APPLICATION_ID/"com.limelight"/g' app/src/main/java/com/limelight/PosterContentProvider.java
-          sed -i 's/BuildConfig\.ROOT_BUILD/false/g' app/src/main/java/com/limelight/binding/input/capture/InputCaptureManager.java
-          sed -i 's/BuildConfig\.ROOT_BUILD/false/g' app/src/main/java/com/limelight/binding/input/evdev/EvdevCaptureProviderShim.java
+          # Use Python to fix the files (more reliable than sed)
+          python3 << 'EOF'
+          import fileinput
+          import glob
+          import os
           
-          # Also fix the interface implementation issue in MoonlightXRPlugin
-          # Remove the @Override annotation from the problematic method (line 233)
-          sed -i '233s/@Override//' xrstreamingplugin/src/main/java/com/limelight/xr/MoonlightXRPlugin.java
+          # Fix all Java files in app module
+          for file_path in glob.glob("app/src/main/java/**/*.java", recursive=True):
+              with fileinput.FileInput(file_path, inplace=True) as file:
+                  for line in file:
+                      line = line.replace("BuildConfig.DEBUG", "true")
+                      line = line.replace("BuildConfig.ROOT_BUILD", "false") 
+                      line = line.replace('BuildConfig.APPLICATION_ID', '"com.limelight"')
+                      print(line, end='')
+          
+          # Fix the specific @Override issue
+          with fileinput.FileInput("xrstreamingplugin/src/main/java/com/limelight/xr/MoonlightXRPlugin.java", inplace=True) as file:
+              lines = list(file)
+              if len(lines) >= 233:
+                  lines[232] = lines[232].replace("@Override", "")
+              for line in lines:
+                  print(line, end='')
+          EOF
       - name: Build AAR
         script: |
           ./gradlew :xrstreamingplugin:assembleDebug
-      - name: Verify AAR
-        script: |
-          echo "=== Generated AAR files ==="
-          find . -name "*.aar" -type f
-          echo "=== AAR file details ==="
-          find . -name "*.aar" -type f -exec ls -la {} \;
     artifacts:
       - xrstreamingplugin/build/outputs/aar/*.aar
