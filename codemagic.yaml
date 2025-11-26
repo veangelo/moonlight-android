@@ -1,8 +1,6 @@
 workflows:
   aar-build:
     name: Build Moonlight AAR
-    environment:
-      android_sdk: "34.0.0"
     scripts:
       - name: Build AAR
         script: |
@@ -15,4 +13,4 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-actual-email@gmail.com   # ← CHANGE THIS TO YOUR EMAIL
+          - your-actual-email@gmail.com
