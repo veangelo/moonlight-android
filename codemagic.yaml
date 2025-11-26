@@ -1,12 +1,9 @@
 workflows:
-  aar-build:
-    name: Build Moonlight AAR
+  apk-build:
+    name: Build Moonlight APK
     scripts:
-      - name: Build All Dependencies First
+      - name: Build APK
         script: |
-          # Build the app module first to generate BuildConfig
           ./gradlew :app:assembleDebug
-          # Then build the xrstreamingplugin
-          ./gradlew :xrstreamingplugin:assembleDebug
     artifacts:
-      - xrstreamingplugin/build/outputs/aar/*.aar
+      - app/build/outputs/apk/debug/app-debug.apk
