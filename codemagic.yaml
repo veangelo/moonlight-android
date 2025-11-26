@@ -2,20 +2,15 @@ workflows:
   aar-build:
     name: Build Moonlight AAR for Unity
     scripts:
-      - name: Fix BuildConfig References
+      - name: Build All Dependencies
         script: |
-          # Temporarily comment out BuildConfig references in problematic files
-          sed -i '.bak' 's/BuildConfig.DEBUG/true/g' app/src/main/java/com/limelight/binding/video/MediaCodecDecoderRenderer.java
-          sed -i '.bak' 's/BuildConfig.DEBUG/false/g' app/src/main/java/com/limelight/nvstream/http/NvHTTP.java
-          sed -i '.bak' 's/BuildConfig.APPLICATION_ID/"com.limelight"/g' app/src/main/java/com/limelight/PosterContentProvider.java
-          sed -i '.bak' 's/BuildConfig.ROOT_BUILD/false/g' app/src/main/java/com/limelight/binding/input/capture/InputCaptureManager.java
-          sed -i '.bak' 's/BuildConfig.ROOT_BUILD/false/g' app/src/main/java/com/limelight/binding/input/evdev/EvdevCaptureProviderShim.java
-      - name: Build AAR
-        script: |
+          # First build the app module to generate ALL BuildConfig and dependencies
+          ./gradlew :app:compileDebugJavaWithJavac
+          # Then build the AAR module
           ./gradlew :xrstreamingplugin:assembleDebug
-      - name: Restore Files
+      - name: List Output Files
         script: |
-          # Restore original files
-          find . -name "*.bak" -exec sh -c 'mv "$1" "${1%.bak}"' _ {} \;
+          find . -name "*.aar" -type f
+          find . -name "BuildConfig.java" -type f
     artifacts:
       - xrstreamingplugin/build/outputs/aar/*.aar
