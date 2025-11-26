@@ -1,4 +1,3 @@
-
 workflows:
   aar-build:
     name: Build Moonlight AAR for Unity
@@ -13,8 +12,8 @@ workflows:
           sed -i 's/BuildConfig\.ROOT_BUILD/false/g' app/src/main/java/com/limelight/binding/input/evdev/EvdevCaptureProviderShim.java
           
           # Also fix the interface implementation issue in MoonlightXRPlugin
-          # Remove the @Override annotation from the problematic method
-          sed -i 's/@Override//' xrstreamingplugin/src/main/java/com/limelight/xr/MoonlightXRPlugin.java
+          # Remove the @Override annotation from the problematic method (line 233)
+          sed -i '233s/@Override//' xrstreamingplugin/src/main/java/com/limelight/xr/MoonlightXRPlugin.java
       - name: Build AAR
         script: |
           ./gradlew :xrstreamingplugin:assembleDebug
@@ -22,5 +21,7 @@ workflows:
         script: |
           echo "=== Generated AAR files ==="
           find . -name "*.aar" -type f
+          echo "=== AAR file details ==="
+          find . -name "*.aar" -type f -exec ls -la {} \;
     artifacts:
       - xrstreamingplugin/build/outputs/aar/*.aar
