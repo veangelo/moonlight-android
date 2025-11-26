@@ -5,5 +5,12 @@ workflows:
       - name: Build APK
         script: |
           ./gradlew :app:assembleDebug
+      - name: List all generated files
+        script: |
+          find . -name "*.apk" -type f
+          find . -name "*.aar" -type f
     artifacts:
-      - app/build/outputs/apk/debug/app-debug.apk
+      - app/build/outputs/apk/**/*.apk
+      - app/build/outputs/**/*.apk
+      - "**/*.apk"
+      - build/**/outputs/**/*
