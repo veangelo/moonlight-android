@@ -2,55 +2,16 @@ workflows:
   aar-build:
     name: Build Moonlight AAR for Unity
     scripts:
-      - name: Fix All Dependencies
+      - name: Debug Build Issues
         script: |
-          # 1. Create BuildConfig in app source
-          mkdir -p app/src/main/java/com/limelight/
-          cat > app/src/main/java/com/limelight/BuildConfig.java << 'EOF'
-          package com.limelight;
-          public final class BuildConfig {
-            public static final boolean DEBUG = true;
-            public static final String APPLICATION_ID = "com.limelight";
-            public static final boolean ROOT_BUILD = false;
-          }
-          EOF
-          
-          # 2. Fix MoonlightXRPlugin package issue
-          # The MoonlightBridge is looking for MoonlightXRPlugin in wrong package
-          # Let's check and fix the package declaration
-          if grep -q "package com.example.moonlight" xrstreamingplugin/src/main/java/com/example/moonlight/MoonlightBridge.java; then
-            sed -i '' 's/package com.example.moonlight;/package com.limelight.xr;/' xrstreamingplugin/src/main/java/com/example/moonlight/MoonlightBridge.java
-          fi
-          
-          # 3. Remove problematic import statements
-          python3 << 'EOF'
-          import fileinput
-          import glob
-          
-          # Remove BuildConfig imports from app module files
-          for file_path in glob.glob("app/src/main/java/**/*.java", recursive=True):
-              with fileinput.FileInput(file_path, inplace=True) as file:
-                  for line in file:
-                      if "import com.limelight.BuildConfig;" not in line:
-                          print(line, end='')
-          
-          # Replace BuildConfig references with values
-          for file_path in glob.glob("app/src/main/java/**/*.java", recursive=True):
-              with fileinput.FileInput(file_path, inplace=True) as file:
-                  for line in file:
-                      line = line.replace("BuildConfig.DEBUG", "true")
-                      line = line.replace("BuildConfig.ROOT_BUILD", "false")
-                      line = line.replace('BuildConfig.APPLICATION_ID', '"com.limelight"')
-                      print(line, end='')
-          EOF
-      - name: Build AAR
+          echo "=== Project Structure ==="
+          find . -name "*.java" -path "*/xrstreamingplugin/*" | head -20
+          echo "=== MoonlightBridge content ==="
+          cat xrstreamingplugin/src/main/java/com/example/moonlight/MoonlightBridge.java || echo "File not found"
+          echo "=== MoonlightXRPlugin content ==="
+          find . -name "MoonlightXRPlugin.java" -exec cat {} \; || echo "File not found"
+      - name: Try Building
         script: |
-          ./gradlew :xrstreamingplugin:assembleDebug
-      - name: Check Results
-        script: |
-          echo "=== AAR Files ==="
-          find . -name "*.aar" -type f
-          echo "=== Build Output ==="
-          ls -la xrstreamingplugin/build/outputs/aar/ || echo "No AAR directory"
+          ./gradlew :xrstreamingplugin:assembleDebug --stacktrace
     artifacts:
       - xrstreamingplugin/build/outputs/aar/*.aar
