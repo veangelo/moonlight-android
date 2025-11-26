@@ -1,40 +1,18 @@
 workflows:
   aar-build:
-    name: Build Moonlight AAR for Unity
+    name: Build Moonlight AAR
     scripts:
-      - name: Complete Fix and Build
+      - name: Build and Extract
         script: |
-          echo "=== Step 1: Check project structure ==="
-          find . -name "MoonlightXRPlugin.java" -type f
-          find . -name "MoonlightBridge.java" -type f
-          
-          echo "=== Step 2: Fix package declarations ==="
-          # Ensure MoonlightXRPlugin is in the correct package
-          if [ -f "xrstreamingplugin/src/main/java/com/limelight/xr/MoonlightXRPlugin.java" ]; then
-            echo "MoonlightXRPlugin is in correct package"
-          else
-            echo "Fixing MoonlightXRPlugin package..."
-            find . -name "MoonlightXRPlugin.java" -exec dirname {} \; | head -1
-          fi
-          
-          echo "=== Step 3: Build with full diagnostics ==="
-          ./gradlew clean
-          ./gradlew :xrstreamingplugin:assembleDebug --info --stacktrace 2>&1 | grep -A 10 -B 5 "error:" || echo "No error pattern found, showing full output:"
-          
-        # If the above fails, run the full build
-      - name: Full Project Build
+          # Just build everything and see what we get
+          ./gradlew build --continue
+      - name: Collect All Outputs
         script: |
-          echo "=== Building entire project ==="
-          ./gradlew clean build --no-daemon
-        # Continue even if this fails to get the AAR
-        continue_on_error: true
-      - name: Find Any Generated AAR
-        script: |
-          echo "=== Searching for ANY AAR files ==="
+          echo "=== All build outputs ==="
           find . -name "*.aar" -type f
-          echo "=== Build outputs ==="
-          ls -la xrstreamingplugin/build/ || echo "No xrstreamingplugin build directory"
-          ls -la app/build/ || echo "No app build directory"
+          find . -name "*.apk" -type f  
+          find . -name "*.jar" -type f
     artifacts:
       - "**/*.aar"
-      - "build/**/outputs/**/*"
+      - "**/*.apk"
+      - "build/**/*"
