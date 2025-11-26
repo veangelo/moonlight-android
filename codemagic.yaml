@@ -2,17 +2,28 @@ workflows:
   aar-build:
     name: Build Moonlight AAR for Unity
     scripts:
-      - name: Create Fake BuildConfig
+      - name: Create All Missing BuildConfig Files
         script: |
-          # Create fake BuildConfig to fix compilation errors
-          mkdir -p xrstreamingplugin/build/generated/source/buildConfig/debug/com/limelight/
-          cat > xrstreamingplugin/build/generated/source/buildConfig/debug/com/limelight/BuildConfig.java << 'EOF'
+          # Create BuildConfig for app module (this is what's actually being imported)
+          mkdir -p app/build/generated/source/buildConfig/debug/com/limelight/
+          cat > app/build/generated/source/buildConfig/debug/com/limelight/BuildConfig.java << 'EOF'
           package com.limelight;
           public final class BuildConfig {
-            public static final boolean DEBUG = Boolean.parseBoolean("true");
-            public static final String APPLICATION_ID = "com.limelight.xr";
+            public static final boolean DEBUG = true;
+            public static final String APPLICATION_ID = "com.limelight";
             public static final String BUILD_TYPE = "debug";
             public static final boolean ROOT_BUILD = false;
+          }
+          EOF
+          
+          # Also create for xrstreamingplugin module
+          mkdir -p xrstreamingplugin/build/generated/source/buildConfig/debug/com/limelight/xr/
+          cat > xrstreamingplugin/build/generated/source/buildConfig/debug/com/limelight/xr/BuildConfig.java << 'EOF'
+          package com.limelight.xr;
+          public final class BuildConfig {
+            public static final boolean DEBUG = true;
+            public static final String APPLICATION_ID = "com.limelight.xr";
+            public static final String BUILD_TYPE = "debug";
           }
           EOF
       - name: Build AAR
